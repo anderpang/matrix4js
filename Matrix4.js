@@ -99,7 +99,6 @@
           m[15] = 1;
           // Translate.
           return this.translate(-eyeX, -eyeY, -eyeZ);
-          return this;
         },
         translate:function(x,y,z){
             var m=this.data;
