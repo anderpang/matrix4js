@@ -11,7 +11,8 @@
     Matrix4.prototype={
         constructor:Matrix4,
         identity:function(){
-             var m=this.data;
+             var m=this.data,i=m.length;
+             while(i--)m[i]=0;
              m[0]=m[5]=m[10]=m[15]=1;
              return this;
         },
@@ -19,7 +20,7 @@
               return new this.constructor(this.data.slice());        
         },
         copyFrom:function(from){
-            var i=16,m=this.data,f=from.data;
+            var m=this.data,f=from.data,i=m.length;
 
             while(i--){
                 m[i]=f[i];
