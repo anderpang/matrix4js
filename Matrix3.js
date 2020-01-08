@@ -16,7 +16,7 @@
              return this;
         },
         copy:function(){
-              return new this.constructor(this.data.slice);        
+              return new this.constructor(this.data);        
         },
         copyFrom:function(from){
             var i=9,m=this.data,f=from.data;
@@ -42,6 +42,7 @@
 
                 m[0]=m0*c+m[1]*s;
                 m[3]=m3*c+m[4]*s;
+
                 m[1]=m[1]*c-m0*s;
                 m[4]=m[4]*c-m3*s;
 
@@ -63,6 +64,16 @@
                 c[i++] =b0*a[1]+b1*a[4]+b2*a[7];
                 c[i++] =b0*a[2]+b1*a[5]+b2*a[8];
             }    
+            return this;
+        },
+        projection:function(width,height){
+            var m=this.data;
+            //[2/width, 0, 0, 0, -2/height, 0, -1, -1, 1]
+            m[0]=2/width;
+            m[4]=-2/height;
+            m[6]=-1;m[7]=1;
+            m[8]=1;
+
             return this;
         },
         transpose:function(){
