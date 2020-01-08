@@ -68,11 +68,11 @@
         },
         projection:function(width,height){
             var m=this.data;
-            //[2/width, 0, 0, 0, -2/height, 0, -1, -1, 1]
+            //[2/width, 0, 0, 0, -2/height, 0, -1, 1, 1]
             m[0]=2/width;
             m[4]=-2/height;
-            m[6]=-1;m[7]=1;
-            m[8]=1;
+            m[6]=-1;
+            m[7]=m[8]=1;
 
             return this;
         },
