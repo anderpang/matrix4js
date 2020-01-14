@@ -1,17 +1,75 @@
+/*! <anderpang@foxmail.com> 2020-01-10 */
+/**
+ * 3*3矩阵
+ */
 "use strict";
 (function(context,factory){
        typeof module==="object"?
-                    module.exports=factory():
-                    context.Matrix3=factory();
+               (exports.__esModule=true,exports=factory()):
+                context.Matrix3=factory();
 })(this,function(){
     function Matrix3(data){
         this.data=new Float32Array(data||9);
     }
 
+    //静态方法，每一个静态方法都是一个初始化的matrix
+    Matrix3.identity=function(){
+        return new this([
+             1,0,0,
+             0,1,0,
+             0,0,1
+        ]);
+     };
+
+     Matrix3.translate=function(tx,ty){
+        return new this([
+            1,0,0,
+            0,1,0,
+            tx,ty,1
+        ]);
+    };
+
+    Matrix3.rotate=function(rad){
+        var s=Math.sin(rad),
+            c=Math.cos(rad);
+        return new this([
+            c,s,0,
+            -s,c,0,
+            0,0,1
+        ]);
+    };
+
+    Matrix3.scale=function(sx,sy,sz){
+        return new this([
+            sx,0,0,
+            0,sy,0,
+            0,0,1
+        ]);
+    };
+
+    //投影
+    Matrix3.projection=function(width,height){
+        return new this([
+            2/width, 0, 0,
+            0, -2/height, 0,
+             -1, 1, 1
+        ]);
+    };
+ 
+
     Matrix3.prototype={
         constructor:Matrix3,
+        zero:function(){
+            var i=9,m=this.data;
+            while(i--){
+               m[i]=0;
+            }
+ 
+            return this;
+         },
         identity:function(){
              var m=this.data;
+             this.zero();
              m[0]=m[4]=m[8]=1;
              return this;
         },
@@ -26,35 +84,6 @@
             }
             return this;
         },
-        translate:function(x,y){
-            var m=this.data;
-            m[6]=x;
-            m[7]=y;
-
-            return this;
-        },
-        rotate:function(rad){
-             var s=Math.sin(rad),
-                 c=Math.cos(rad),
-                 m=this.data,
-                 m0=m[0],
-                 m3=m[3];
-
-                m[0]=m0*c+m[1]*s;
-                m[3]=m3*c+m[4]*s;
-
-                m[1]=m[1]*c-m0*s;
-                m[4]=m[4]*c-m3*s;
-
-             return this;
-         },
-         scale: function(sx, sy) {
-             var m=this.data;
-             m[0]*=sx;
-             m[4]*=sy;
-            
-             return this;
-        },
         multiply:function(m){
             var i=0,ii=9,b0,b1,b2,c=this.data,a=c.slice(),b=m.data;
 
@@ -66,15 +95,14 @@
             }    
             return this;
         },
-        projection:function(width,height){
-            var m=this.data;
-            //[2/width, 0, 0, 0, -2/height, 0, -1, 1, 1]
-            m[0]=2/width;
-            m[4]=-2/height;
-            m[6]=-1;
-            m[7]=m[8]=1;
-
-            return this;
+        translate:function(tx,ty){
+            return this.multiply(Matrx3.translate(tx,ty));
+        },
+        rotate:function(rad){
+            return this.multiply(Matrx3.rotate(rad));
+        },
+        scale: function(sx, sy) {
+            return this.multiply(Matrix3.scale(sx,sy));
         },
         transpose:function(){
             var m=this.data,
