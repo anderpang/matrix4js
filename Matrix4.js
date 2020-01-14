@@ -1,17 +1,153 @@
+/*! <anderpang@foxmail.com> 2020-01-10 */
+/**
+ * 4*4矩阵
+ */
 "use strict";
 (function(context,factory){
-       typeof module==="object"?
-                    module.exports=factory():
+       typeof exports==="object"?
+                    (exports.__esModule=true,exports=factory()):
                     context.Matrix4=factory();
 })(this,function(){
+
     function Matrix4(data){
         this.data=new Float32Array(data||16);
     }
 
+    //静态方法，每一个静态方法都是一个初始化的matrix
+    Matrix4.identity=function(){
+       return new this([
+            1,0,0,0,
+            0,1,0,0,
+            0,0,1,0,
+            0,0,0,1
+       ]);
+    };
+
+    Matrix4.translate=function(tx,ty,tz){
+        return new this([
+            1,0,0,0,
+            0,1,0,0,
+            0,0,1,0,
+            tx,ty,tz,1
+        ]);
+    };
+
+    Matrix4.rotateX=function(rad){
+        var s=Math.sin(rad),
+            c=Math.cos(rad);
+        return new this([
+            1,0,0,0,
+            0,c,s,0,
+            0,-s,c,0,
+            0,0,0,1
+        ]);
+    };
+
+    Matrix4.rotateY=function(rad){
+        var s=Math.sin(rad),
+            c=Math.cos(rad);
+        return new this([
+            c,0,s,0,
+            0,1,0,0,
+            -s,0,c,0,
+            0,0,0,1
+        ]);
+    };
+
+    Matrix4.rotateZ=function(rad){
+        var s=Math.sin(rad),
+            c=Math.cos(rad);
+        return new this([
+            c,s,0,0,
+            -s,c,0,0,
+            0,0,1,0,
+            0,0,0,1
+        ]);
+    };
+
+    Matrix4.scale=function(sx,sy,sz){
+        return new this([
+            sx,0,0,0,
+            0,sy,0,0,
+            0,0,sz,0,
+            0,0,0,1
+        ]);
+    };
+
+    //投影
+    Matrix4.perspective=function(fovy,aspect,n,f){
+        var t=1/Math.tan(fovy*Math.PI/360),  //等价Math.tan(Math.PI * 0.5 - 0.5 * fovy*Math.PI/180);
+           d=1/(n-f);
+    
+       return new this([
+           t/aspect,0,0,0,
+           0,t,0,0,
+           0,0,(f+n)*d,-1,
+           0,0,2*f*n*d,0            
+       ]);
+    };
+
+    //方向
+    Matrix4.lookAt=function(eye,target,up) {
+        var eyeX=eye[0], eyeY=eye[1], eyeZ=eye[2], 
+            upX=up[0], upY=up[1], upZ=up[2],
+            fx, fy, fz, rlf, sx, sy, sz, rls, ux, uy, uz;
+
+        fx = eyeX - target[0];
+        fy = eyeY - target[1];
+        fz = eyeZ - target[2];
+
+        if(fx+fy+fz===0){
+            return this.identity();
+        }
+
+        // Normalize f.
+        rlf = 1 / Math.sqrt(fx*fx + fy*fy + fz*fz);
+        fx *= rlf;
+        fy *= rlf;
+        fz *= rlf;
+
+        // Calculate cross product of up and f.
+        sx = upY*fz - upZ*fy;
+        sy = upZ*fx - upX*fz;
+        sz = upX*fy - upY*fx;
+
+        // Normalize s.
+        rls = 1 / Math.sqrt(sx*sx + sy*sy + sz*sz);
+        sx *= rls;
+        sy *= rls;
+        sz *= rls;
+
+        // Calculate cross product of f and s.
+        ux = fy*sz - fz*sy;
+        uy = fz*sx - fx*sz;
+        uz = fx*sy - fy*sx;
+
+        // Set to this.
+        return new this([
+            sx,sy,sz,0,
+            ux,uy,uz,0,
+            fx,fy,fz,0,
+            eyeX,eyeY,eyeZ,1
+         ]);
+
+        // Translate.
+        //return this.translate(eyeX, eyeY, eyeZ);
+    };
+
     Matrix4.prototype={
         constructor:Matrix4,
+        zero:function(){
+           var i=16,m=this.data;
+           while(i--){
+              m[i]=0;
+           }
+
+           return this;
+        },
         identity:function(){
              var m=this.data;
+             this.zero();
              m[0]=m[5]=m[10]=m[15]=1;
              return this;
         },
@@ -26,148 +162,31 @@
             }
             return this;
         },
-        perspective:function(fovy,aspect,n,f){
-             var t=1/Math.tan(fovy*Math.PI/360),
-                d=f-n,
-                m=this.data;
-             /*
-            return new Float32Array([
-                t/aspect,0,0,0,
-                0,t,0,0,
-                0,0,-(f+n)/d,-1,
-                0,0,-2*f*n/d,0            
-            ]);
-            */
-            m[0]=t/aspect;
-            m[5]=t;
-            m[10]=-(f+n)/d;
-            m[11]=-1;
-            m[14]=-2*f*n/d;
-
-            return this;
-         },
-         lookAt:function(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
-          var e, fx, fy, fz, rlf, sx, sy, sz, rls, ux, uy, uz,m=this.data;
-
-          fx = centerX - eyeX;
-          fy = centerY - eyeY;
-          fz = centerZ - eyeZ;
-
-          // Normalize f.
-          rlf = 1 / Math.sqrt(fx*fx + fy*fy + fz*fz);
-          fx *= rlf;
-          fy *= rlf;
-          fz *= rlf;
-
-          // Calculate cross product of f and up.
-          sx = fy * upZ - fz * upY;
-          sy = fz * upX - fx * upZ;
-          sz = fx * upY - fy * upX;
-
-          // Normalize s.
-          rls = 1 / Math.sqrt(sx*sx + sy*sy + sz*sz);
-          sx *= rls;
-          sy *= rls;
-          sz *= rls;
-
-          // Calculate cross product of s and f.
-          ux = sy * fz - sz * fy;
-          uy = sz * fx - sx * fz;
-          uz = sx * fy - sy * fx;
-
-          // Set to this.
-          /*
-          e = new Float32Array([
-              sx,ux,-fx,0,
-              sy,uy,-fy,0,
-              sz,uz,-fz,0,
-              -eyeX,-eyeY,-eyeZ,1
-           ]);
-           */
-          m[0] = sx;
-          m[1] = ux;
-          m[2] = -fx;
-
-          m[4] = sy;
-          m[5] = uy;
-          m[6] = -fy;
-
-          m[8] = sz;
-          m[9] = uz;
-          m[10] = -fz;
-
-          m[15] = 1;
-          // Translate.
-          //return this.translate(-eyeX, -eyeY, -eyeZ);
-          return this;
-        },
-        translate:function(x,y,z){
-            var m=this.data;
-            m[12]=x;
-            m[13]=y;
-            m[14]=z;
-
-            return this;
-        },
-        rotateX:function(rad){
-             var s=Math.sin(rad),
-                 c=Math.cos(rad),
-                 m=this.data;
-       
-             var m1=m[1],m5=m[5],m9=m[9];
-             m[1]=m1*c+m[2]*s;
-             m[5]=m5*c+m[6]*s;
-             m[9]=m9*c+m[10]*s;
-
-             m[2]=m[2]*c-m1*s;
-             m[6]=m[6]*c-m5*s;
-             m[10]=m[10]*c-m9*s;
-             return this;
-         },
-         rotateY:function(rad){
-            var s=Math.sin(rad),
-                c=Math.cos(rad),
-                m=this.data,
-                m0=m[0],m4=m[4],m8=m[8];
-
-            m[0]=m0*c+m[2]*s;
-            m[4]=m4*c+m[6]*s;
-            m[8]=m8*c+m[10]*s;
-
-            m[2]=m[2]*c-m0*s;
-            m[6]=m[6]*c-m4*s;
-            m[10]=m[10]*c-m8*s;
-
-            return this;
-        },
-        rotateZ:function(rad){
-            var s=Math.sin(rad),
-                c=Math.cos(rad),
-                m=this.data,
-                m0=m[0],m4=m[4],m8=m[8];
-
-            m[0]=m0*c+m[1]*s;
-            m[4]=m4*c+m[5]*s;
-            m[8]=m8*c+m[9]*s;
-
-            m[1]=m[1]*c-m0*s;
-            m[5]=m[5]*c-m4*s;
-            m[9]=m[9]*c-m8*s;
-
-            return this;
-        },
-        multiply:function(m){
-            var i=0,ii=16,b0,b1,b2,b3,c=this.data,a=c.slice(),b=m.data;
+        multiply:function(t){
+            var i=0,ii=16,b0,b1,b2,b3,m=this.data,a=m.slice(),b=t.data;
 
             while(i<ii){
                 b0=b[i];b1=b[i+1];b2=b[i+2];b3=b[i+3];
-                c[i++] =b0*a[0]+b1*a[4]+b2*a[8] +b3*a[12];
-                c[i++] =b0*a[1]+b1*a[5]+b2*a[9] +b3*a[13];
-                c[i++] =b0*a[2]+b1*a[6]+b2*a[10]+b3*a[14];
-                c[i++] =b0*a[3]+b1*a[7]+b2*a[11]+b3*a[15];
+                m[i++] =b0*a[0]+b1*a[4]+b2*a[8] +b3*a[12];
+                m[i++] =b0*a[1]+b1*a[5]+b2*a[9] +b3*a[13];
+                m[i++] =b0*a[2]+b1*a[6]+b2*a[10]+b3*a[14];
+                m[i++] =b0*a[3]+b1*a[7]+b2*a[11]+b3*a[15];
             }    
             return this;
         },
+        translate:function(tx,ty,tz){
+            return this.multiply(Matrix4.translate(tx,ty,tz));
+        },
+        rotateX:function(rad){
+             return this.multiply(Matrix4.rotateX(rad));
+         },
+         rotateY:function(rad){
+            return this.multiply(Matrix4.rotateY(rad));
+        },
+        rotateZ:function(rad){
+            return this.multiply(Matrix4.rotateZ(rad));
+        },
+        
         invert:function(){
           var m=this.data,
               a=m.slice();
