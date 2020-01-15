@@ -91,18 +91,19 @@
     Matrix4.lookAt=function(eye,target,up) {
         var eyeX=eye[0], eyeY=eye[1], eyeZ=eye[2], 
             upX=up[0], upY=up[1], upZ=up[2],
-            fx, fy, fz, rlf, sx, sy, sz, rls, ux, uy, uz;
+            fx, fy, fz, rlf, sx, sy, sz, rls, ux, uy, uz,f2;
 
         fx = eyeX - target[0];
         fy = eyeY - target[1];
         fz = eyeZ - target[2];
 
-        if(fx+fy+fz===0){
+        f2=fx*fx + fy*fy + fz*fz;
+        if(f2===0){
             return this.identity();
         }
 
         // Normalize f.
-        rlf = 1 / Math.sqrt(fx*fx + fy*fy + fz*fz);
+        rlf = 1 / Math.sqrt(f2);
         fx *= rlf;
         fy *= rlf;
         fz *= rlf;
