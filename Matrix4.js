@@ -114,10 +114,18 @@
         sz = upX*fy - upY*fx;
 
         // Normalize s.
-        rls = 1 / Math.sqrt(sx*sx + sy*sy + sz*sz);
-        sx *= rls;
-        sy *= rls;
-        sz *= rls;
+        f2=sx*sx + sy*sy + sz*sz;
+        if(f2===0){
+            sx=0;
+            sy=0;
+            sz=-1;
+        }
+        else{
+            rls = 1 / Math.sqrt(f2);
+            sx *= rls;
+            sy *= rls;
+            sz *= rls;
+        }
 
         // Calculate cross product of f and s.
         ux = fy*sz - fz*sy;
